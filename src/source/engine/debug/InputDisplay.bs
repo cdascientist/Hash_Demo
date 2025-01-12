@@ -1,0 +1,42 @@
+' @module BGE
+namespace BGE.Debug
+
+  class InputDisplay extends DebugWindow
+
+    private lastInputButton as string = ""
+    private heldTimeSeconds as float = 0
+    private inputLabel as BGE.UI.Label
+
+    function new(game as BGE.Game) as void
+      super(game)
+      m.width = 240
+      m.height = 40
+      m.vertAlign = "bottom"
+      m.inputLabel = new BGE.UI.Label(game)
+      m.inputLabel.drawableText.font = m.game.getFont("debugUI")
+      m.addChild(m.inputLabel)
+    end function
+
+    override function onInput(input as BGE.GameInput)
+      m.lastInputButton = input.button
+      m.heldTimeSeconds = input.heldTimeMs / 1000
+    end function
+
+    override function onUpdate(dt as float) as void
+      buttonName = "none"
+      heldTimeStr = "0"
+      if invalid <> m.lastInputButton
+        buttonName = m.lastInputButton
+        heldTimeStr = BGE.NumberToFixed(m.heldTimeSeconds, 2)
+      end if
+
+      m.inputLabel.setText(`Input: ${buttonName} (${heldTimeStr}s)`)
+      m.lastInputButton = invalid
+
+      m.width = m.inputLabel.width + 20
+    end function
+
+
+  end class
+
+end namespace

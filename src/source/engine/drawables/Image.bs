@@ -1,0 +1,29 @@
+' @module BGE
+namespace BGE
+
+  ' Used to draw a bitmap image to the screen
+  class Image extends Drawable
+
+
+    ' -------------Never To Be Manually Changed-----------------
+    ' These values should never need to be manually changed.
+    private region as object
+
+
+    function new(owner as GameEntity, canvasBitmap as object, region as object, args = {} as object) as void
+      super(owner, canvasBitmap, args)
+      m.region = region
+      m.append(args)
+    end function
+
+
+    override function draw(additionalRotation = 0 as float) as void
+      m.width = m.region.getWidth()
+      m.height = m.region.getHeight()
+      if m.enabled
+        m.drawRegionToCanvas(m.region, additionalRotation)
+      end if
+    end function
+
+  end class
+end namespace

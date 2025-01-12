@@ -1,0 +1,116 @@
+namespace BGE.UI
+
+  ' Base Abstract class for all UI Elements
+  class UiWidget extends BGE.GameEntity
+
+    ' If position = "custom", then m.customX is horizontal position of this element from the parent position
+    ' and m.customY is the vertical position of this element from the parent position (positive is down)
+    customPosition as boolean = false
+
+    customX as float = 0
+    customY as float = 0
+
+    ' If customPosition is false, this dictates where horizontally in the container this element should go. Can be: "left", "center" or "right"
+    horizAlign as string = "left"
+    ' If customPosition is false, this dictates where vertically in the container this element should go. Can be: "top", "center" or "bottom"
+    vertAlign as string = "top"
+
+    ' Width of the element
+    width as integer = 0
+    ' Height of the element
+    height as integer = 0
+
+    protected canvas as object
+
+    padding as Offset = new Offset()
+    margin as Offset = new Offset()
+
+
+
+    function new(game as BGE.Game) as void
+      super(game)
+      m.setCanvas(game.getCanvas())
+    end function
+
+
+    ' Function to get the value of the UI element
+    '
+    ' @return {dynamic} - the value of this element
+    function getValue() as dynamic
+      return invalid
+    end function
+
+
+    ' Method called each frame to draw any images of this entity
+    '
+    ' @param {object} [parent=invalid] - the parent of this Ui Element - will be an object with {x, y, width, height}
+    function draw(parent = invalid as object) as void
+    end function
+
+
+    ' Set the canvas this UIWidgetDraws to
+    '
+    ' @param {object} [canvas=invalid] The canvas this should draw to - if invalid, then will draw to the game canvas
+    sub setCanvas(canvas = invalid as object)
+      if canvas <> invalid
+        m.canvas = canvas
+      else
+        m.canvas = m.game.getCanvas()
+      end if
+    end sub
+
+    ' Method called each frame to reposition
+    '
+    ' @param {object} [parent=invalid] - the parent of this Ui Element - will be an object with {x, y, width, height}
+    function repositionBasedOnParent(parent = invalid as object) as void
+      drawPosition = m.getDrawPosition(parent)
+      m.x = drawPosition.x
+      m.y = drawPosition.y
+    end function
+
+    ' Method called each frame to draw any images of this entity
+    '
+    ' @param {object} [parent=invalid] - the parent of this Ui Element - will be an object with {x, y, width, height}
+    ' @return {object} - x,y coordinates of where this widget should be positioned
+    protected function getDrawPosition(parent = invalid as object) as object
+      drawPosition = {x: 0, y: 0}
+      parentPadding = new Offset()
+      if invalid <> parent
+        drawPosition.x += parent.x
+        drawPosition.y += parent.y
+        if invalid <> parent.padding
+          parentPadding = parent.padding
+        end if
+      else
+        parent = {x: 0, y: 0}
+      end if
+
+      if m.customPosition or invalid = parent.width or invalid = parent.height
+        drawPosition.x += m.customX
+        drawPosition.y += m.customY
+      else
+        hAlign = lcase(m.horizAlign).trim()
+        vAlign = lcase(m.vertAlign).trim()
+        if "left" = hAlign
+          drawPosition.x += m.margin.left + parentPadding.left
+        else if "center" = hAlign
+          drawPosition.x += parent.width / 2 - m.width / 2
+        else if "right" = hAlign
+          drawPosition.x += parent.width - m.width - parentPadding.right - m.margin.right
+        end if
+
+        if "top" = vAlign
+          drawPosition.y += m.margin.top + parentPadding.top
+        else if "center" = vAlign
+          drawPosition.y += parent.height / 2 - m.height / 2
+        else if "bottom" = vAlign
+          drawPosition.y += parent.height - m.height - m.margin.bottom - parentPadding.bottom
+        end if
+      end if
+      return drawPosition
+    end function
+
+
+  end class
+
+end namespace

@@ -1,0 +1,13 @@
+{
+  "folders": [
+	{
+		"path": "examples/pong"
+	},
+	{
+		"path": "."
+	}
+],
+  "settings": {
+    "brightscript.bsdk": "node_modules/brighterscript"
+  }
+}

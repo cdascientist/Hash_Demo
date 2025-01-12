@@ -1,0 +1,8 @@
+{
+  "files.exclude": {
+    "examples": true,
+    "*.code-workspace": true,
+    "node_modules": true,
+    "roku_modules": true
+  }
+}
