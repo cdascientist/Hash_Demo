@@ -1,37 +1,229 @@
+' Thread functions (must be outside of any class)
+function ServiceLayerOne_RunInThread(params as object) as void
+    service = params[0]
+    service.execute()
+end function
+
+function ServiceLayerTwo_RunInThread(params as object) as void
+    service = params[0]
+    service.execute()
+end function
+
+class ServiceLayerOne
+    private debug = invalid
+    private messagePort = invalid
+
+    function new() as void
+        m.debug = CreateObject("roDeviceInfo")
+        m.messagePort = CreateObject("roMessagePort")
+    end function
+
+    function execute() as void
+        m.log("Service Layer One Executing")
+        ' Simulate some work
+        sleep(1000)
+        m.messagePort.PostMessage("ServiceOneComplete")
+    end function
+
+    function getMessagePort() as object
+        return m.messagePort
+    end function
+
+    private function log(message as string) as void
+        ? message
+    end function
+end class
+
+class ServiceLayerTwo
+    private debug = invalid
+    private messagePort = invalid
+
+    function new() as void
+        m.debug = CreateObject("roDeviceInfo")
+        m.messagePort = CreateObject("roMessagePort")
+    end function
+
+    function execute() as void
+        m.log("Service Layer Two Executing")
+        ' Simulate some work
+        sleep(1500)
+        m.messagePort.PostMessage("ServiceTwoComplete")
+    end function
+
+    function getMessagePort() as object
+        return m.messagePort
+    end function
+
+    private function log(message as string) as void
+        ? message
+    end function
+end class
+
+class PhaseBase
+    protected nextPhaseObj = invalid
+    private debug = invalid
+
+    function new() as void
+        m.debug = CreateObject("roDeviceInfo")
+    end function
+
+    protected function log(message as string) as void
+        ? message  ' Using print statement for debug output
+    end function
+
+    function getNextPhase() as object
+        if m.nextPhaseObj = invalid
+            m.createNextPhase()
+        end if
+        return m.nextPhaseObj
+    end function
+
+    protected function createNextPhase() as void
+        ' To be implemented by child classes
+    end function
+
+    function execute() as void
+        ' To be implemented by child classes
+    end function
+end class
+
+class InitPhase extends PhaseBase
+    private serviceOne = invalid
+    private serviceTwo = invalid
+
+    function new() as void
+        super()
+        m.serviceOne = new ServiceLayerOne()
+        m.serviceTwo = new ServiceLayerTwo()
+    end function
+
+    override function execute() as void
+        m.log("PHASE 1: Initialization Phase")
+        
+        ' Create threads for parallel execution
+        threadOne = CreateObject("roThread")
+        threadTwo = CreateObject("roThread")
+        
+        ' Start service one in its own thread
+        threadOne.Run([m.serviceOne], ServiceLayerOne_RunInThread)
+        m.log("Service Layer One Thread Started")
+        
+        ' Start service two in its own thread
+        threadTwo.Run([m.serviceTwo], ServiceLayerTwo_RunInThread)
+        m.log("Service Layer Two Thread Started")
+        
+        ' Wait for both services to complete
+        while true
+            msg1 = m.serviceOne.getMessagePort().GetMessage()
+            msg2 = m.serviceTwo.getMessagePort().GetMessage()
+            
+            if msg1 <> invalid and msg2 <> invalid
+                m.log("All Services Completed")
+                exit while
+            end if
+            sleep(100)
+        end while
+    end function
+
+    protected override function createNextPhase() as void
+        m.nextPhaseObj = new SetupPhase()
+    end function
+end class
+
+class SetupPhase extends PhaseBase
+    function new() as void
+        super()
+    end function
+
+    override function execute() as void
+        m.log("PHASE 2: Setup Phase")
+    end function
+
+    protected override function createNextPhase() as void
+        m.nextPhaseObj = new ExecutePhase()
+    end function
+end class
+
+class ExecutePhase extends PhaseBase
+    function new() as void
+        super()
+    end function
+
+    override function execute() as void
+        m.log("PHASE 3: Execution Phase")
+    end function
+
+    protected override function createNextPhase() as void
+        m.nextPhaseObj = new CompletePhase()
+    end function
+end class
+
+class CompletePhase extends PhaseBase
+    function new() as void
+        super()
+    end function
+
+    override function execute() as void
+        m.log("PHASE 4: Completion Phase")
+    end function
+
+    protected override function createNextPhase() as void
+        m.nextPhaseObj = new InitPhase()
+    end function
+end class
+
+class PhaseFactory
+    private current_phase = invalid
+    
+    function new() as void
+        m.current_phase = new InitPhase()
+    end function
+    
+    function nextPhase() as void
+        if m.current_phase <> invalid
+            m.current_phase.execute()
+            m.current_phase = m.current_phase.getNextPhase()
+        end if
+    end function
+end class
+
 class MainRoom extends BGE.Room
     ' Sphere properties
-    center_x = 640    ' Center of screen X
-    center_y = 360    ' Center of screen Y
-    radius = 100      ' Sphere radius
-    rotation = 0      ' Current rotation angle
-    rotation_speed = 4 ' Increased rotation speed
-    
+    private center_x = 640    ' Center of screen X
+    private center_y = 360    ' Center of screen Y
+    private radius = 100      ' Sphere radius
+    private rotation = 0      ' Current rotation angle
+    private rotation_speed = 4 ' Increased rotation speed
+   
     ' Arrays for sphere points and lines
-    points = []       ' Store 3D points
-    lines = []       ' Store line connections
-    num_segments = 12 ' Reduced segments for better performance
+    private points = []       ' Store 3D points
+    private lines = []       ' Store line connections
+    private num_segments = 12 ' Reduced segments for better performance
     
+    ' Factory instance
+    private factory = invalid
+   
     function new(game) as void
         super(game)
         m.name = "MainRoom"
         m.generateSpherePoints()
         m.generateLines()
+        m.factory = new PhaseFactory()
     end function
-    
-    ' Generate points for sphere wireframe (called once at init)
+   
     function generateSpherePoints() as void
         m.points.clear()
         step_phi = 180/m.num_segments
         step_theta = 360/m.num_segments
-        
+       
         for phi = 0 to 180 step step_phi
             rad_phi = phi * 0.0174533
             sin_phi = Sin(rad_phi)
             cos_phi = Cos(rad_phi)
-            
+           
             for theta = 0 to 360 step step_theta
                 rad_theta = theta * 0.0174533
-                
+               
                 point = {}
                 point.x = m.radius * Cos(rad_theta) * sin_phi
                 point.y = m.radius * Sin(rad_theta) * sin_phi
@@ -40,22 +232,21 @@ class MainRoom extends BGE.Room
             next
         next
     end function
-    
-    ' Pre-calculate line connections (called once at init)
+   
     function generateLines() as void
         m.lines.clear()
         threshold = m.radius * 0.75  ' Increased threshold for more connections
-        
+       
         for i = 0 to m.points.count() - 1
             p1 = m.points[i]
             for j = i + 1 to m.points.count() - 1
                 p2 = m.points[j]
-                
+               
                 dx = p1.x - p2.x
                 dy = p1.y - p2.y
                 dz = p1.z - p2.z
                 distance = Sqr(dx * dx + dy * dy + dz * dz)
-                
+               
                 if distance < threshold
                     line = {}
                     line.i1 = i
@@ -65,8 +256,7 @@ class MainRoom extends BGE.Room
             next
         next
     end function
-    
-    ' Rotate point around Y axis (optimized)
+   
     function rotatePoint(point, cos_a, sin_a) as object
         rotated = {}
         rotated.x = point.x * cos_a + point.z * sin_a
@@ -74,8 +264,7 @@ class MainRoom extends BGE.Room
         rotated.z = -point.x * sin_a + point.z * cos_a
         return rotated
     end function
-    
-    ' Project 3D point to 2D screen space (optimized)
+   
     function project(point) as object
         projected = {}
         scale = 300 / (300 + point.z)
@@ -83,16 +272,16 @@ class MainRoom extends BGE.Room
         projected.y = m.center_y + point.y * scale
         return projected
     end function
-    
-    override function onDrawBegin(canvas)
+   
+    override function onDrawBegin(canvas) as void
         ' Clear background
         canvas.DrawRect(0, 0, 1280, 720, &h000000FF)
-        
+       
         ' Pre-calculate rotation values
         rad_rotation = m.rotation * 0.0174533
         cos_a = Cos(rad_rotation)
         sin_a = Sin(rad_rotation)
-        
+       
         ' Create array for rotated points
         rotated_points = []
         for each point in m.points
@@ -100,21 +289,25 @@ class MainRoom extends BGE.Room
             projected = m.project(rotated)
             rotated_points.push(projected)
         next
-        
+       
         ' Draw lines using pre-calculated connections
         for each line in m.lines
             p1 = rotated_points[line.i1]
             p2 = rotated_points[line.i2]
             canvas.DrawLine(p1.x, p1.y, p2.x, p2.y, &h4169E1FF)
         next
-        
+       
         ' Update rotation for next frame
         m.rotation = (m.rotation + m.rotation_speed) mod 360
     end function
-    
-    override function onInput(input)
+
+    override function onInput(input) as void
         if input.isButton("back")
             m.game.End()
+        else if input.isButton("OK")
+            if m.factory <> invalid
+                m.factory.nextPhase()
+            end if
         end if
     end function
 end class

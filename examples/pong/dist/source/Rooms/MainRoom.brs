@@ -1,3 +1,192 @@
+function __ServiceLayerOne_builder()
+    instance = {}
+    instance.new = function() as void
+        m.debug = invalid
+        m.debug = CreateObject("roDeviceInfo")
+    end function
+    instance.execute = function() as void
+        m.log("Service Layer One Executing")
+    end function
+    instance.log = function(message as string) as void
+        ? message
+    end function
+    return instance
+end function
+function ServiceLayerOne()
+    instance = __ServiceLayerOne_builder()
+    instance.new()
+    return instance
+end function
+function __ServiceLayerTwo_builder()
+    instance = {}
+    instance.new = function() as void
+        m.debug = invalid
+        m.debug = CreateObject("roDeviceInfo")
+    end function
+    instance.execute = function() as void
+        m.log("Service Layer Two Executing")
+    end function
+    instance.log = function(message as string) as void
+        ? message
+    end function
+    return instance
+end function
+function ServiceLayerTwo()
+    instance = __ServiceLayerTwo_builder()
+    instance.new()
+    return instance
+end function
+function __PhaseBase_builder()
+    instance = {}
+    instance.new = function() as void
+        m.nextPhaseObj = invalid
+        m.debug = invalid
+        m.debug = CreateObject("roDeviceInfo")
+    end function
+    instance.log = function(message as string) as void
+        ? message ' Using print statement for debug output
+    end function
+    instance.getNextPhase = function() as object
+        if m.nextPhaseObj = invalid
+            m.createNextPhase()
+        end if
+        return m.nextPhaseObj
+    end function
+    instance.createNextPhase = function() as void
+        ' To be implemented by child classes
+    end function
+    instance.execute = function() as void
+        ' To be implemented by child classes
+    end function
+    return instance
+end function
+function PhaseBase()
+    instance = __PhaseBase_builder()
+    instance.new()
+    return instance
+end function
+function __InitPhase_builder()
+    instance = __PhaseBase_builder()
+    instance.super0_new = instance.new
+    instance.new = function() as void
+        m.super0_new()
+        m.serviceOne = invalid
+        m.serviceTwo = invalid
+        m.serviceOne = ServiceLayerOne()
+        m.serviceTwo = ServiceLayerTwo()
+    end function
+    instance.super0_execute = instance.execute
+    instance.execute = function() as void
+        m.log("PHASE 1: Initialization Phase")
+        ' Execute services in parallel using Tasks
+        taskOne = CreateObject("roSGNode", "Task")
+        taskOne.observeField("state", "onTaskOneComplete")
+        taskOne.control = "RUN"
+        m.serviceOne.execute()
+        taskTwo = CreateObject("roSGNode", "Task")
+        taskTwo.observeField("state", "onTaskTwoComplete")
+        taskTwo.control = "RUN"
+        m.serviceTwo.execute()
+    end function
+    instance.onTaskOneComplete = function(event as object) as void
+        m.log("Service Layer One Task Complete")
+    end function
+    instance.onTaskTwoComplete = function(event as object) as void
+        m.log("Service Layer Two Task Complete")
+    end function
+    instance.super0_createNextPhase = instance.createNextPhase
+    instance.createNextPhase = function() as void
+        m.nextPhaseObj = SetupPhase()
+    end function
+    return instance
+end function
+function InitPhase()
+    instance = __InitPhase_builder()
+    instance.new()
+    return instance
+end function
+function __SetupPhase_builder()
+    instance = __PhaseBase_builder()
+    instance.super0_new = instance.new
+    instance.new = function() as void
+        m.super0_new()
+    end function
+    instance.super0_execute = instance.execute
+    instance.execute = function() as void
+        m.log("PHASE 2: Setup Phase")
+    end function
+    instance.super0_createNextPhase = instance.createNextPhase
+    instance.createNextPhase = function() as void
+        m.nextPhaseObj = ExecutePhase()
+    end function
+    return instance
+end function
+function SetupPhase()
+    instance = __SetupPhase_builder()
+    instance.new()
+    return instance
+end function
+function __ExecutePhase_builder()
+    instance = __PhaseBase_builder()
+    instance.super0_new = instance.new
+    instance.new = function() as void
+        m.super0_new()
+    end function
+    instance.super0_execute = instance.execute
+    instance.execute = function() as void
+        m.log("PHASE 3: Execution Phase")
+    end function
+    instance.super0_createNextPhase = instance.createNextPhase
+    instance.createNextPhase = function() as void
+        m.nextPhaseObj = CompletePhase()
+    end function
+    return instance
+end function
+function ExecutePhase()
+    instance = __ExecutePhase_builder()
+    instance.new()
+    return instance
+end function
+function __CompletePhase_builder()
+    instance = __PhaseBase_builder()
+    instance.super0_new = instance.new
+    instance.new = function() as void
+        m.super0_new()
+    end function
+    instance.super0_execute = instance.execute
+    instance.execute = function() as void
+        m.log("PHASE 4: Completion Phase")
+    end function
+    instance.super0_createNextPhase = instance.createNextPhase
+    instance.createNextPhase = function() as void
+        m.nextPhaseObj = InitPhase()
+    end function
+    return instance
+end function
+function CompletePhase()
+    instance = __CompletePhase_builder()
+    instance.new()
+    return instance
+end function
+function __PhaseFactory_builder()
+    instance = {}
+    instance.new = function() as void
+        m.current_phase = invalid
+        m.current_phase = InitPhase()
+    end function
+    instance.nextPhase = function() as void
+        if m.current_phase <> invalid
+            m.current_phase.execute()
+            m.current_phase = m.current_phase.getNextPhase()
+        end if
+    end function
+    return instance
+end function
+function PhaseFactory()
+    instance = __PhaseFactory_builder()
+    instance.new()
+    return instance
+end function
 function __MainRoom_builder()
     instance = __BGE_Room_builder()
     ' Sphere properties
@@ -10,6 +199,7 @@ function __MainRoom_builder()
     ' Store 3D points
     ' Store line connections
     ' Reduced segments for better performance
+    ' Factory instance
     instance.super1_new = instance.new
     instance.new = function(game) as void
         m.super1_new(game)
@@ -21,11 +211,12 @@ function __MainRoom_builder()
         m.points = []
         m.lines = []
         m.num_segments = 12
+        m.factory = invalid
         m.name = "MainRoom"
         m.generateSpherePoints()
         m.generateLines()
+        m.factory = PhaseFactory()
     end function
-    ' Generate points for sphere wireframe (called once at init)
     instance.generateSpherePoints = function() as void
         m.points.clear()
         step_phi = 180 / m.num_segments
@@ -44,7 +235,6 @@ function __MainRoom_builder()
             next
         next
     end function
-    ' Pre-calculate line connections (called once at init)
     instance.generateLines = function() as void
         m.lines.clear()
         threshold = m.radius * 0.75 ' Increased threshold for more connections
@@ -65,7 +255,6 @@ function __MainRoom_builder()
             next
         next
     end function
-    ' Rotate point around Y axis (optimized)
     instance.rotatePoint = function(point, cos_a, sin_a) as object
         rotated = {}
         rotated.x = point.x * cos_a + point.z * sin_a
@@ -73,7 +262,6 @@ function __MainRoom_builder()
         rotated.z = - point.x * sin_a + point.z * cos_a
         return rotated
     end function
-    ' Project 3D point to 2D screen space (optimized)
     instance.project = function(point) as object
         projected = {}
         scale = 300 / (300 + point.z)
@@ -82,7 +270,7 @@ function __MainRoom_builder()
         return projected
     end function
     instance.super1_onDrawBegin = instance.onDrawBegin
-    instance.onDrawBegin = function(canvas)
+    instance.onDrawBegin = function(canvas) as void
         ' Clear background
         canvas.DrawRect(0, 0, 1280, 720, &h000000FF)
         ' Pre-calculate rotation values
@@ -106,9 +294,13 @@ function __MainRoom_builder()
         m.rotation = (m.rotation + m.rotation_speed) mod 360
     end function
     instance.super1_onInput = instance.onInput
-    instance.onInput = function(input)
+    instance.onInput = function(input) as void
         if input.isButton("back")
             m.game.End()
+        else if input.isButton("OK")
+            if m.factory <> invalid
+                m.factory.nextPhase()
+            end if
         end if
     end function
     return instance
