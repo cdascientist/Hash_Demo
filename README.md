@@ -62,6 +62,11 @@ ROKU_HOST=<local IP address of the target roku>
 Then simply run one of the Debug configurations from the Debug tab.
 
 ## Installation
+The Machine Learning Implementation can be found in the rendered room code: 
+
+```
+cd Hash_Demo/Examples/pong/src/source/Rooms
+```
 
 
 ## Documentation
