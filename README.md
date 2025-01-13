@@ -1,6 +1,6 @@
-# Brighterscript Game Engine
+# Client side Machine Learning, Clustering, and Data Fragmentation and 3d rendering using Brighterscript Game Engine
 
-An object oriented game engine for the Roku, written in [Brighterscript](https://github.com/rokucommunity/brighterscript), and (SOON!) available via [ROPM](https://github.com/rokucommunity/ropm).
+An object oriented  machine learning implementation using BrighterScript game engine for the Roku, written in [Brighterscript](https://github.com/rokucommunity/brighterscript)
 
 This project is designed to be used with VScode.
 
@@ -8,47 +8,45 @@ This was originally forked from [Roku-gameEngine](https://github.com/Romans-I-XV
 
 ## Introduction
 
-The purpose of this project is to make it easy to develop games for the Roku in an object oriented fashion. Similar to how you would with an engine such as Phaser, HaxeFlixel, Gamemaker or Unity (minus any visual software that is).
+The purpose of this project is to make it easy establish a client side framework for Roku device machine learning compute on client devices
+
+By implementing these methodologies:
+
+1- Integration of the Brighter Script Game Engine
+
+2- Illustrating the retrieval of data on I/O side of client device
+
+3- Clustering data on client side
+
+4- Using Kmeans Clustering Machine Learning Algorithm 
+
+5- Placing the Centroid Results into a fragmentation pattern 
+
+6- Implementing the fragmentation according to a Fractal diffusion 
 
 ## Cloning and Running Examples
 
-The Brighterscript Game Engine public repository is on [Github](https://github.com/markwpearce/brighterscript-game-engine/)
+The Client side Machine Learning, Clustering, and Data Fragmentation and 3d rendering repository is on [Github](https://github.com/cdascientist/Hash_Demo.git)
 
 Clone the project:
 
 ```
-git clone https://github.com/markwpearce/brighterscript-game-engine.git
+git clone https://github.com/cdascientist/Hash_Demo.git
 ```
 
-This project includes various example Roku apps in the `examples` directory. To run them, you will need a Roku and have it set up properly for doing development. See: https://developer.roku.com/en-ca/docs/developer-program/getting-started/developer-setup.md.
+This project an example Roku apps in the `examples` directory. To run them, you will need a Roku and have it set up properly for doing development. See: https://developer.roku.com/en-ca/docs/developer-program/getting-started/developer-setup.md.
 
 To run the examples:
 
 Install dependencies:
 
 ```
-cd brighterscript-game-engine
+cd Hash_Demo
 npm install
 ```
 
-You will need to "install" the brighterscript-game-engine in the examples directories. You can do this by running `ropm install` in each example (e.g. ./examples/snake) or by using the handy script:
-
 ```
-npm run prepare-examples
-```
-
-You can manually build the examples from the command line and manually add the zip files to your Roku:
-
-```
-npm run build-examples
-```
-
-The above command will generate example .zip files like `./examples/asteroids/out/asteroids.zip`
-
-Open the Workspace in VS Code:
-
-```
-code brighterscript-game-engine.code-workspace
+code Hash_Demo_Application.code-workspace
 ```
 
 We recommend you install the great [Brightscript Language vscode extension](https://marketplace.visualstudio.com/items?itemName=RokuCommunity.brightscript).
@@ -65,19 +63,6 @@ Then simply run one of the Debug configurations from the Debug tab.
 
 ## Installation
 
-_NOTE - Not available yet from ropm!_
-
-Use ropm:
-
-```
-ropm install brighterscript-game-engine
-```
-
-Suggestion - use a shorter prefix (we use `bge` in the documentation):
-
-```
-ropm install bge@npm:brighterscript-game-engine
-```
 
 ## Documentation
 
