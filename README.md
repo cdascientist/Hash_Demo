@@ -72,6 +72,11 @@ The main Application Entry Point can be found:
 ```
 cd Hash_Demo/Examples/pong/src/source/
 ```
+
+When the application launches press OK to execute the code
+```
+Press OK
+```
 ## Documentation
 
 Documentation can be found [here](https://markwpearce.github.io/brighterscript-game-engine)
