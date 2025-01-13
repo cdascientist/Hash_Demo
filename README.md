@@ -68,7 +68,10 @@ The Machine Learning Implementation can be found in the rendered room code:
 cd Hash_Demo/Examples/pong/src/source/Rooms
 ```
 
-
+The main Application Entry Point can be found:
+```
+cd Hash_Demo/Examples/pong/src/source/
+```
 ## Documentation
 
 Documentation can be found [here](https://markwpearce.github.io/brighterscript-game-engine)
